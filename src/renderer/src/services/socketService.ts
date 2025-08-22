@@ -83,7 +83,7 @@ class SocketService {
           console.error('❌ Socket.IO reconnection error:', error);
           this.reconnectAttempts++;
           
-          if (this.reconnectAttempts >= this.maxReconnectionAttempts) {
+          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             console.error('❌ Max reconnection attempts reached');
             this.isConnected = false;
           }
