@@ -99,18 +99,7 @@ function LobbyPage() {
     }
   }
 
-  const handleTestAPI = async () => {
-    console.log('Testing API...')
-    try {
-      const response = await fetch('http://localhost:3001/rooms')
-      const data = await response.json()
-      console.log('API test successful:', data)
-      alert(`API working! Found ${data.total} rooms`)
-    } catch (err: any) {
-      console.error('API test failed:', err)
-      alert('API test failed: ' + err.message)
-    }
-  }
+
 
   return (
     <div className="min-h-screen bg-[#f4f4f1] text-black flex flex-col items-center justify-center font-serif px-4 py-8 sm:px-6 md:px-10">
@@ -122,13 +111,7 @@ function LobbyPage() {
       >
         <h1 className="text-4xl font-black text-center mb-8">Join the Duel</h1>
         
-        {/* Test API Button */}
-        <button
-          onClick={handleTestAPI}
-          className="w-full mb-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-        >
-          Test API Connection
-        </button>
+
         
         {/* Username Input */}
         <div className="mb-6">
