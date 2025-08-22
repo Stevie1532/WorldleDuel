@@ -5,7 +5,7 @@ import { apiService } from '../services/apiService'
 import { useGameStore } from '../stores/gameStore'
 import { ModeSelector } from '../components/ModeSelector'
 import type { Room } from '../stores/gameStore'
-
+//workds
 export const Route = createFileRoute('/lobby')({
   component: LobbyPage
 })
