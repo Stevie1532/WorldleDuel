@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+out
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+*.env
+
+# Logs
+*.log*
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cache files
+.eslintcache
+.tanstack/
+tsconfig.web.tsbuildinfo
+
+# Frontend environment files
+src/renderer/.env*
+src/renderer/frontend-production.env
+
+# Temporary files
+*.tmp
+*.temp
