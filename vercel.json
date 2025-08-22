@@ -13,11 +13,6 @@
   "outputDirectory": "out",
   "installCommand": "pnpm install",
   "framework": "electron",
-  "functions": {
-    "src/renderer/src/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   },
