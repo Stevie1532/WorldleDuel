@@ -21,11 +21,17 @@ export interface Room {
   roundNumber?: number
 }
 
+// Game board tile interface
+export interface GameTile {
+  letter: string
+  status: 'correct' | 'present' | 'absent' | 'unused'
+}
+
 export interface GameState {
   currentRoom: Room | null
   currentPlayer: string | null
   isHost: boolean
-  gameBoard: string[][]
+  gameBoard: GameTile[][]
   currentGuess: string
   gameStatus: 'waiting' | 'playing' | 'finished'
   winner: string | null
@@ -38,7 +44,7 @@ export interface GameActions {
   setCurrentRoom: (room: Room) => void
   setCurrentPlayer: (username: string) => void
   setIsHost: (isHost: boolean) => void
-  updateGameBoard: (board: string[][]) => void
+  updateGameBoard: (board: GameTile[][]) => void
   setCurrentGuess: (guess: string) => void
   setGameStatus: (status: 'waiting' | 'playing' | 'finished') => void
   setWinner: (winner: string | null) => void
@@ -52,12 +58,12 @@ export interface GameActions {
   eliminatePlayer: (playerId: string) => void
 }
 
-export const useGameStore = create<GameState & GameActions>((set, get) => ({
+export const useGameStore = create<GameState & GameActions>((set) => ({
   // Initial state
   currentRoom: null,
   currentPlayer: null,
   isHost: false,
-  gameBoard: Array(6).fill(null).map(() => Array(5).fill('')),
+  gameBoard: Array(6).fill(null).map(() => Array(5).fill({ letter: '', status: 'unused' as const })),
   currentGuess: '',
   gameStatus: 'waiting',
   winner: null,
@@ -93,7 +99,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   setActivePlayers: (players) => set({ activePlayers: players }),
 
   resetGame: () => set({
-    gameBoard: Array(6).fill(null).map(() => Array(5).fill('')),
+    gameBoard: Array(6).fill(null).map(() => Array(5).fill({ letter: '', status: 'unused' as const })),
     currentGuess: '',
     gameStatus: 'waiting',
     winner: null,
@@ -101,67 +107,22 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     activePlayers: []
   }),
 
-  addPlayer: (player) => {
-    const { currentRoom } = get()
-    if (currentRoom) {
-      const updatedRoom = {
-        ...currentRoom,
-        players: [...currentRoom.players, player]
-      }
-      set({ 
-        currentRoom: updatedRoom,
-        activePlayers: updatedRoom.players.filter(p => !p.eliminated),
-        eliminatedPlayers: updatedRoom.players.filter(p => p.eliminated).map(p => p.id)
-      })
-    }
-  },
+  addPlayer: (player) => set((state) => ({
+    activePlayers: [...state.activePlayers, player]
+  })),
 
-  removePlayer: (playerId) => {
-    const { currentRoom } = get()
-    if (currentRoom) {
-      const updatedRoom = {
-        ...currentRoom,
-        players: currentRoom.players.filter(p => p.id !== playerId)
-      }
-      set({ 
-        currentRoom: updatedRoom,
-        activePlayers: updatedRoom.players.filter(p => !p.eliminated),
-        eliminatedPlayers: updatedRoom.players.filter(p => p.eliminated).map(p => p.id)
-      })
-    }
-  },
+  removePlayer: (playerId) => set((state) => ({
+    activePlayers: state.activePlayers.filter(p => p.id !== playerId)
+  })),
 
-  updatePlayer: (playerId, updates) => {
-    const { currentRoom } = get()
-    if (currentRoom) {
-      const updatedRoom = {
-        ...currentRoom,
-        players: currentRoom.players.map(p => 
-          p.id === playerId ? { ...p, ...updates } : p
-        )
-      }
-      set({ 
-        currentRoom: updatedRoom,
-        activePlayers: updatedRoom.players.filter(p => !p.eliminated),
-        eliminatedPlayers: updatedRoom.players.filter(p => p.eliminated).map(p => p.id)
-      })
-    }
-  },
+  updatePlayer: (playerId, updates) => set((state) => ({
+    activePlayers: state.activePlayers.map(p => 
+      p.id === playerId ? { ...p, ...updates } : p
+    )
+  })),
 
-  eliminatePlayer: (playerId) => {
-    const { currentRoom } = get()
-    if (currentRoom) {
-      const updatedRoom = {
-        ...currentRoom,
-        players: currentRoom.players.map(p => 
-          p.id === playerId ? { ...p, eliminated: true } : p
-        )
-      }
-      set({ 
-        currentRoom: updatedRoom,
-        activePlayers: updatedRoom.players.filter(p => !p.eliminated),
-        eliminatedPlayers: updatedRoom.players.filter(p => p.eliminated).map(p => p.id)
-      })
-    }
-  }
+  eliminatePlayer: (playerId) => set((state) => ({
+    eliminatedPlayers: [...state.eliminatedPlayers, playerId],
+    activePlayers: state.activePlayers.filter(p => p.id !== playerId)
+  }))
 }))

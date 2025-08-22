@@ -4,7 +4,7 @@
   "description": "A multiplayer Wordle-style game with 1v1 Duel and Battle Royale modes",
   "main": "./out/main/index.js",
   "author": "Word Duel Team",
-  "homepage": "https://wordduel.com",
+  "homepage": "https://github.com/yourusername/word-duel#readme",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
@@ -14,7 +14,7 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
-    "build:prod": "npm run typecheck && NODE_ENV=production electron-vite build",
+    "build:prod": "npm run typecheck && cross-env NODE_ENV=production electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build:prod && electron-builder --win",
@@ -37,9 +37,10 @@
     "prebuild": "npm run clean",
     "postbuild": "echo 'Build completed successfully!'",
     "analyze": "npm run build:prod && npx electron-builder --dir --win && npx electron-builder-bundle-analyzer out/win-unpacked/resources/app.asar",
+    "env:setup": "node setup-env.js",
+    "env:setup:domain": "node setup-env.js",
     "env:dev": "cp src/renderer/frontend-production.env src/renderer/.env.development",
-    "env:prod": "cp src/renderer/frontend-production.env src/renderer/.env.production",
-    "env:setup": "npm run env:dev && npm run env:prod"
+    "env:prod": "cp src/renderer/frontend-production.env src/renderer/.env.production"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -65,6 +66,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.0.0",
     "electron": "^37.2.3",
     "electron-builder": "^25.1.8",
     "electron-vite": "^4.0.0",
@@ -72,15 +74,15 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "jest": "^29.7.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "rimraf": "^5.0.5",
     "tailwindcss": "3",
     "typescript": "^5.8.3",
-    "vite": "^7.0.5",
-    "jest": "^29.7.0",
-    "rimraf": "^5.0.5"
+    "vite": "^7.0.5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -109,6 +111,5 @@
   },
   "bugs": {
     "url": "https://github.com/yourusername/word-duel/issues"
-  },
-  "homepage": "https://github.com/yourusername/word-duel#readme"
+  }
 }

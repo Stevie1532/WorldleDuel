@@ -9,7 +9,7 @@ interface CustomWordInputProps {
   isLoading?: boolean
 }
 
-export function CustomWordInput({ onWordSubmit, onRandomWord, disabled = false, isLoading = false }: CustomWordInputProps) {
+export function CustomWordInput({ onWordSubmit, onRandomWord: _onRandomWord, disabled = false, isLoading = false }: CustomWordInputProps) {
   const [customWord, setCustomWord] = useState('')
   const [isValid, setIsValid] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')

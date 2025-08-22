@@ -4,11 +4,30 @@ import { io, Socket } from 'socket.io-client';
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
-  // Get socket URL from environment variables
+  // Get socket URL from environment variables with fallbacks
   private getSocketUrl(): string {
     return import.meta.env.VITE_SOCKET_URL || 
            (import.meta.env.DEV ? 'http://localhost:3001' : 'https://wordduel.com');
+  }
+
+  // Get socket configuration from environment
+  private getSocketConfig() {
+    return {
+      transports: ['websocket', 'polling'] as string[],
+      timeout: parseInt(import.meta.env.VITE_SOCKET_TIMEOUT || '20000'),
+      forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_ATTEMPTS || '5'),
+      reconnectionDelay: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_DELAY || '1000'),
+      reconnectionDelayMax: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_DELAY_MAX || '5000'),
+      maxReconnectionAttempts: parseInt(import.meta.env.VITE_SOCKET_MAX_RECONNECTION_ATTEMPTS || '5'),
+      autoConnect: true,
+      upgrade: true,
+      rememberUpgrade: true
+    };
   }
 
   // Connect to Socket.IO server
@@ -16,23 +35,17 @@ class SocketService {
     return new Promise((resolve, reject) => {
       try {
         const socketUrl = this.getSocketUrl();
-        console.log('Connecting to Socket.IO server:', socketUrl);
+        const config = this.getSocketConfig();
         
-        this.socket = io(socketUrl, {
-          transports: ['websocket', 'polling'],
-          timeout: 20000,
-          forceNew: true,
-          reconnection: true,
-          reconnectionAttempts: 5,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 5000,
-          maxReconnectionAttempts: 5,
-          autoConnect: true
-        });
+        console.log('Connecting to Socket.IO server:', socketUrl);
+        console.log('Socket configuration:', config);
+        
+        this.socket = io(socketUrl, config);
 
         this.socket.on('connect', () => {
           console.log('Connected to Socket.IO server');
           this.isConnected = true;
+          this.reconnectAttempts = 0;
           resolve();
         });
 
@@ -45,20 +58,37 @@ class SocketService {
         this.socket.on('disconnect', (reason) => {
           console.log('Disconnected from Socket.IO server:', reason);
           this.isConnected = false;
+          
+          // Handle reconnection for certain disconnect reasons
+          if (reason === 'io server disconnect' || reason === 'io client disconnect') {
+            console.log('Server disconnected, attempting to reconnect...');
+            this.socket?.connect();
+          }
         });
 
         this.socket.on('reconnect', (attemptNumber) => {
           console.log('Reconnected to Socket.IO server after', attemptNumber, 'attempts');
           this.isConnected = true;
+          this.reconnectAttempts = 0;
         });
 
         this.socket.on('reconnect_error', (error) => {
           console.error('Socket.IO reconnection error:', error);
+          this.reconnectAttempts++;
+          
+          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.error('Max reconnection attempts reached');
+            this.isConnected = false;
+          }
         });
 
         this.socket.on('reconnect_failed', () => {
           console.error('Socket.IO reconnection failed');
           this.isConnected = false;
+        });
+
+        this.socket.on('error', (error) => {
+          console.error('Socket.IO error:', error);
         });
 
       } catch (error) {
@@ -74,6 +104,7 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.reconnectAttempts = 0;
       console.log('Disconnected from Socket.IO server');
     }
   }
@@ -85,6 +116,7 @@ class SocketService {
       console.log('Joining room:', { username, roomCode });
     } else {
       console.error('Cannot join room: Socket not connected');
+      throw new Error('Socket not connected');
     }
   }
 
@@ -95,6 +127,7 @@ class SocketService {
       console.log('Starting game:', { roomCode, customWord });
     } else {
       console.error('Cannot start game: Socket not connected');
+      throw new Error('Socket not connected');
     }
   }
 
@@ -105,6 +138,7 @@ class SocketService {
       console.log('Submitting guess:', { roomCode, username, guess, attemptNumber });
     } else {
       console.error('Cannot submit guess: Socket not connected');
+      throw new Error('Socket not connected');
     }
   }
 
@@ -160,6 +194,17 @@ class SocketService {
     return this.socket;
   }
 
+  // Get connection info
+  getConnectionInfo() {
+    return {
+      isConnected: this.isConnected,
+      reconnectAttempts: this.reconnectAttempts,
+      maxReconnectAttempts: this.maxReconnectAttempts,
+      socketUrl: this.getSocketUrl(),
+      socketConfig: this.getSocketConfig()
+    };
+  }
+
   // Remove all listeners
   removeAllListeners(): void {
     if (this.socket) {
@@ -171,6 +216,14 @@ class SocketService {
   removeListener(event: string): void {
     if (this.socket) {
       this.socket.removeAllListeners(event);
+    }
+  }
+
+  // Force reconnection
+  forceReconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket.connect();
     }
   }
 }

@@ -83,7 +83,7 @@ function LobbyPage() {
     console.log('Joining room:', { username: username.trim(), code: roomCode.trim() })
 
     try {
-      const response = await apiService.joinRoom(roomCode.trim().toUpperCase(), username.trim())
+      const response = await apiService.joinRoom({ code: roomCode.trim().toUpperCase(), username: username.trim() })
       console.log('Joined room successfully:', response)
       
       setCurrentPlayer(username.trim())

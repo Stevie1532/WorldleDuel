@@ -8,7 +8,7 @@ interface GameTimerProps {
   onTimeUp?: () => void
 }
 
-export function GameTimer({ startTime, isActive, mode, onTimeUp }: GameTimerProps) {
+export function GameTimer({ startTime, isActive, mode, onTimeUp: _onTimeUp }: GameTimerProps) {
   const [elapsedTime, setElapsedTime] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 

@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './renderer/src/routes/__root'
 import { Route as ResultsRouteImport } from './renderer/src/routes/results'
 import { Route as LobbyRouteImport } from './renderer/src/routes/lobby'
-import { Route as GameRouteImport } from './renderer/src/routes/game'
 import { Route as AboutRouteImport } from './renderer/src/routes/about'
 import { Route as IndexRouteImport } from './renderer/src/routes/index'
 import { Route as RoomCodeRouteImport } from './renderer/src/routes/room.$code'
@@ -24,11 +23,6 @@ const ResultsRoute = ResultsRouteImport.update({
 const LobbyRoute = LobbyRouteImport.update({
   id: '/lobby',
   path: '/lobby',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GameRoute = GameRouteImport.update({
-  id: '/game',
-  path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -50,7 +44,6 @@ const RoomCodeRoute = RoomCodeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/game': typeof GameRoute
   '/lobby': typeof LobbyRoute
   '/results': typeof ResultsRoute
   '/room/$code': typeof RoomCodeRoute
@@ -58,7 +51,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/game': typeof GameRoute
   '/lobby': typeof LobbyRoute
   '/results': typeof ResultsRoute
   '/room/$code': typeof RoomCodeRoute
@@ -67,30 +59,21 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/game': typeof GameRoute
   '/lobby': typeof LobbyRoute
   '/results': typeof ResultsRoute
   '/room/$code': typeof RoomCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/game' | '/lobby' | '/results' | '/room/$code'
+  fullPaths: '/' | '/about' | '/lobby' | '/results' | '/room/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/game' | '/lobby' | '/results' | '/room/$code'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/game'
-    | '/lobby'
-    | '/results'
-    | '/room/$code'
+  to: '/' | '/about' | '/lobby' | '/results' | '/room/$code'
+  id: '__root__' | '/' | '/about' | '/lobby' | '/results' | '/room/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  GameRoute: typeof GameRoute
   LobbyRoute: typeof LobbyRoute
   ResultsRoute: typeof ResultsRoute
   RoomCodeRoute: typeof RoomCodeRoute
@@ -110,13 +93,6 @@ declare module '@tanstack/react-router' {
       path: '/lobby'
       fullPath: '/lobby'
       preLoaderRoute: typeof LobbyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/game': {
-      id: '/game'
-      path: '/game'
-      fullPath: '/game'
-      preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -146,7 +122,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  GameRoute: GameRoute,
   LobbyRoute: LobbyRoute,
   ResultsRoute: ResultsRoute,
   RoomCodeRoute: RoomCodeRoute,

@@ -118,7 +118,7 @@ interface PlayerListProps {
   showAvatars?: boolean
 }
 
-export function PlayerList({ players, currentPlayer, mode, showAvatars = true }: PlayerListProps) {
+export function PlayerList({ players, currentPlayer, mode, showAvatars: _showAvatars = true }: PlayerListProps) {
   const sortedPlayers = [...players].sort((a, b) => {
     if (a.won && !b.won) return -1
     if (!a.won && b.won) return 1

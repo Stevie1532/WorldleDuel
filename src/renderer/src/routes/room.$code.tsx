@@ -16,18 +16,13 @@ export const Route = createFileRoute('/room/$code')({
 function RoomPage() {
   const navigate = useNavigate()
   const { code } = Route.useParams()
-  const { 
-    currentRoom, 
-    currentPlayer, 
-    isHost, 
-    mode, 
+  const {
+    currentRoom,
+    currentPlayer,
+    isHost,
     gameStatus,
     setCurrentRoom,
-    setCurrentPlayer,
-    setIsHost,
-    setGameStatus,
-    setWinner,
-    resetGame
+    setGameStatus
   } = useGameStore()
 
   const [customWord, setCustomWord] = useState('')
@@ -51,10 +46,10 @@ function RoomPage() {
     })
 
     // Listen for game start
-    socketService.onGameStarted((data) => {
+    socketService.onGameStarted((_data) => {
       setGameStatus('playing')
       setShowCountdown(false)
-      navigate({ to: '/game' })
+      navigate({ to: '/results' })
     })
 
     // Listen for game errors
@@ -138,13 +133,13 @@ function RoomPage() {
           className="text-center mb-8"
         >
           <h1 className="text-4xl font-black mb-2">
-            {mode === 'duel' ? '⚔️ Duel Room' : '🏆 Battle Royale Room'}
+            {currentRoom.mode === 'duel' ? '⚔️ Duel Room' : '🏆 Battle Royale Room'}
           </h1>
           <div className="text-xl text-gray-600 mb-4">
             Room Code: <span className="font-mono font-bold text-[#1a1a1a]">{code}</span>
           </div>
           <div className="text-lg text-gray-700">
-            {mode === 'duel' ? 'Face off against one opponent' : 'Last player standing wins'}
+            {currentRoom.mode === 'duel' ? 'Face off against one opponent' : 'Last player standing wins'}
           </div>
         </motion.div>
 
@@ -164,9 +159,9 @@ function RoomPage() {
           <div className="space-y-6">
             {/* Game Timer */}
             <GameTimer
-              startTime={currentRoom.gameStartTime}
+              startTime={currentRoom.gameStartTime || null}
               isActive={gameStatus === 'playing'}
-              mode={mode}
+              mode={currentRoom.mode}
             />
 
             {/* Host Controls */}
@@ -235,7 +230,7 @@ function RoomPage() {
                   Navigate to the game page to start playing.
                 </div>
                 <button
-                  onClick={() => navigate({ to: '/game' })}
+                  onClick={() => navigate({ to: '/results' })}
                   className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
                 >
                   Go to Game
@@ -250,13 +245,13 @@ function RoomPage() {
             <PlayerList
               players={currentRoom.players}
               currentPlayer={currentPlayer}
-              mode={mode}
+              mode={currentRoom.mode}
             />
 
             {/* Leaderboard */}
             <Leaderboard
               players={currentRoom.players}
-              mode={mode}
+              mode={currentRoom.mode}
               showStats={false}
             />
 
@@ -283,7 +278,7 @@ function RoomPage() {
                 </div>
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-gray-800">
-                    {mode === 'duel' ? '⚔️' : '🏆'}
+                    {currentRoom.mode === 'duel' ? '⚔️' : '🏆'}
                   </div>
                   <div className="text-sm text-gray-600">Game Mode</div>
                 </div>
