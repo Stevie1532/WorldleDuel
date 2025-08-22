@@ -180,7 +180,7 @@ function RoomPage() {
             <button
               onClick={async () => {
                 try {
-                  await socketService.connect()
+                  await socketService.reconnect()
                   setIsConnected(true)
                   socketService.joinRoom(currentPlayer || 'Anonymous', code)
                 } catch (error) {

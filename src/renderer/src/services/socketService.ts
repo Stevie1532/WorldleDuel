@@ -23,8 +23,7 @@ class SocketService {
       reconnectionAttempts: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_ATTEMPTS || '5'),
       reconnectionDelay: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_DELAY || '1000'),
       reconnectionDelayMax: parseInt(import.meta.env.VITE_SOCKET_RECONNECTION_DELAY_MAX || '5000'),
-      maxReconnectionAttempts: parseInt(import.meta.env.VITE_SOCKET_MAX_RECONNECTION_ATTEMPTS || '5'),
-      autoConnect: true,
+      autoConnect: false, // Changed to false to prevent auto-reconnection loops
       upgrade: true,
       rememberUpgrade: true
     };
@@ -47,6 +46,14 @@ class SocketService {
           return;
         }
         
+        // Prevent multiple connection attempts
+        if (this.socket && !this.isConnected) {
+          console.log('🔄 Socket exists but not connected, cleaning up...');
+          this.socket.removeAllListeners();
+          this.socket.disconnect();
+          this.socket = null;
+        }
+        
         this.socket = io(socketUrl, config);
 
         this.socket.on('connect', () => {
@@ -66,11 +73,9 @@ class SocketService {
           console.log('🔌 Disconnected from Socket.IO server:', reason);
           this.isConnected = false;
           
-          // Handle reconnection for certain disconnect reasons
-          if (reason === 'io server disconnect' || reason === 'io client disconnect') {
-            console.log('🔄 Server disconnected, attempting to reconnect...');
-            this.socket?.connect();
-          }
+          // Don't auto-reconnect on disconnect to prevent loops
+          // Let the user manually reconnect if needed
+          console.log('📝 Disconnected. Use reconnect button to reconnect manually.');
         });
 
         this.socket.on('reconnect', (attemptNumber) => {
@@ -79,20 +84,8 @@ class SocketService {
           this.reconnectAttempts = 0;
         });
 
-        this.socket.on('reconnect_error', (error) => {
-          console.error('❌ Socket.IO reconnection error:', error);
-          this.reconnectAttempts++;
-          
-          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error('❌ Max reconnection attempts reached');
-            this.isConnected = false;
-          }
-        });
-
-        this.socket.on('reconnect_failed', () => {
-          console.error('❌ Socket.IO reconnection failed');
-          this.isConnected = false;
-        });
+        // Note: Socket.IO v4+ doesn't have these events by default
+        // They need to be handled manually if needed
 
         this.socket.on('error', (error) => {
           console.error('❌ Socket.IO error:', error);
@@ -227,6 +220,18 @@ class SocketService {
     return this.isConnected;
   }
 
+  // Debug connection state
+  debugConnection(): void {
+    console.log('🔍 Socket Connection Debug Info:');
+    console.log('  - isConnected:', this.isConnected);
+    console.log('  - socket exists:', !!this.socket);
+    console.log('  - socket ID:', this.socket?.id || 'N/A');
+    console.log('  - socket connected:', this.socket?.connected || false);
+    console.log('  - reconnect attempts:', this.reconnectAttempts);
+    console.log('  - socket URL:', this.getSocketUrl());
+    console.log('  - socket config:', this.getSocketConfig());
+  }
+
   // Get socket instance
   getSocket(): Socket | null {
     return this.socket;
@@ -251,6 +256,31 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket.connect();
+    }
+  }
+
+  // Manual reconnection with proper cleanup
+  async reconnect(): Promise<void> {
+    console.log('🔄 Manual reconnection requested');
+    
+    // Clean up existing connection
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+    }
+    
+    // Reset state
+    this.isConnected = false;
+    this.reconnectAttempts = 0;
+    
+    // Attempt new connection
+    try {
+      await this.connect();
+      console.log('✅ Manual reconnection successful');
+    } catch (error) {
+      console.error('❌ Manual reconnection failed:', error);
+      throw error;
     }
   }
 }
