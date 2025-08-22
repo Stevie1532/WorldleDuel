@@ -6,14 +6,14 @@ const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 
 // API URLs with environment-specific fallbacks
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (isDevelopment ? 'http://localhost:3001/api/v1' : 'https://determined-quietude-production.up.railway.app/api/v1');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (isDevelopment ? 'http://localhost:3001/api/v1' : 'https://wordleduel.onrender.com/api/v1');
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
-  (isDevelopment ? 'http://localhost:3001' : 'https://determined-quietude-production.up.railway.app');
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
+  (isDevelopment ? 'http://localhost:3001' : 'https://wordleduel.onrender.com');
 
-const HEALTH_CHECK_URL = import.meta.env.VITE_HEALTH_CHECK_URL || 
-  (isDevelopment ? 'http://localhost:3001/health' : 'https://determined-quietude-production.up.railway.app/health');
+const HEALTH_CHECK_URL = import.meta.env.VITE_HEALTH_CHECK_URL ||
+  (isDevelopment ? 'http://localhost:3001/health' : 'https://wordleduel.onrender.com/health');
 
 // Feature flags from environment
 const FEATURE_FLAGS = {
