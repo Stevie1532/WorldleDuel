@@ -5,6 +5,7 @@ import { apiService } from '../services/apiService'
 import { useGameStore } from '../stores/gameStore'
 import { ModeSelector } from '../components/ModeSelector'
 import type { Room } from '../stores/gameStore'
+import { socketService } from '../services/socketService'
 //workds
 export const Route = createFileRoute('/lobby')({
   component: LobbyPage
@@ -31,6 +32,10 @@ function LobbyPage() {
     console.log('Creating room for username:', username.trim(), 'Mode:', selectedMode)
 
     try {
+      // Connect to socket first
+      await socketService.connect()
+      console.log('✅ Socket connected successfully')
+      
       const response = await apiService.createRoom({
         username: username.trim(),
         mode: selectedMode
@@ -66,7 +71,11 @@ function LobbyPage() {
       navigate({ to: `/room/${response.code}` })
     } catch (err) {
       console.error('Error creating room:', err)
-      setError('Failed to create room. Please try again.')
+      if (err instanceof Error && err.message.includes('Socket')) {
+        setError('Failed to connect to game server. Please check your connection and try again.')
+      } else {
+        setError('Failed to create room. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -83,6 +92,10 @@ function LobbyPage() {
     console.log('Joining room:', { username: username.trim(), code: roomCode.trim() })
 
     try {
+      // Connect to socket first
+      await socketService.connect()
+      console.log('✅ Socket connected successfully')
+      
       const response = await apiService.joinRoom({ code: roomCode.trim().toUpperCase(), username: username.trim() })
       console.log('Joined room successfully:', response)
       
@@ -93,7 +106,11 @@ function LobbyPage() {
       navigate({ to: `/room/${roomCode.trim().toUpperCase()}` })
     } catch (err: any) {
       console.error('Error joining room:', err)
-      setError(err.message || 'Failed to join room. Please try again.')
+      if (err instanceof Error && err.message.includes('Socket')) {
+        setError('Failed to connect to game server. Please check your connection and try again.')
+      } else {
+        setError(err.message || 'Failed to join room. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }

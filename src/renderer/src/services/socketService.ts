@@ -37,62 +37,77 @@ class SocketService {
         const socketUrl = this.getSocketUrl();
         const config = this.getSocketConfig();
         
-        console.log('Connecting to Socket.IO server:', socketUrl);
-        console.log('Socket configuration:', config);
+        console.log('🔌 Attempting to connect to Socket.IO server:', socketUrl);
+        console.log('⚙️ Socket configuration:', config);
+        
+        // If already connected, resolve immediately
+        if (this.isConnected && this.socket) {
+          console.log('✅ Already connected to Socket.IO server');
+          resolve();
+          return;
+        }
         
         this.socket = io(socketUrl, config);
 
         this.socket.on('connect', () => {
-          console.log('Connected to Socket.IO server');
+          console.log('✅ Connected to Socket.IO server successfully');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           resolve();
         });
 
         this.socket.on('connect_error', (error) => {
-          console.error('Socket.IO connection error:', error);
+          console.error('❌ Socket.IO connection error:', error);
           this.isConnected = false;
           reject(error);
         });
 
         this.socket.on('disconnect', (reason) => {
-          console.log('Disconnected from Socket.IO server:', reason);
+          console.log('🔌 Disconnected from Socket.IO server:', reason);
           this.isConnected = false;
           
           // Handle reconnection for certain disconnect reasons
           if (reason === 'io server disconnect' || reason === 'io client disconnect') {
-            console.log('Server disconnected, attempting to reconnect...');
+            console.log('🔄 Server disconnected, attempting to reconnect...');
             this.socket?.connect();
           }
         });
 
         this.socket.on('reconnect', (attemptNumber) => {
-          console.log('Reconnected to Socket.IO server after', attemptNumber, 'attempts');
+          console.log('🔄 Reconnected to Socket.IO server after', attemptNumber, 'attempts');
           this.isConnected = true;
           this.reconnectAttempts = 0;
         });
 
         this.socket.on('reconnect_error', (error) => {
-          console.error('Socket.IO reconnection error:', error);
+          console.error('❌ Socket.IO reconnection error:', error);
           this.reconnectAttempts++;
           
-          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error('Max reconnection attempts reached');
+          if (this.reconnectAttempts >= this.maxReconnectionAttempts) {
+            console.error('❌ Max reconnection attempts reached');
             this.isConnected = false;
           }
         });
 
         this.socket.on('reconnect_failed', () => {
-          console.error('Socket.IO reconnection failed');
+          console.error('❌ Socket.IO reconnection failed');
           this.isConnected = false;
         });
 
         this.socket.on('error', (error) => {
-          console.error('Socket.IO error:', error);
+          console.error('❌ Socket.IO error:', error);
         });
 
+        // Add timeout for connection
+        setTimeout(() => {
+          if (!this.isConnected) {
+            console.error('⏰ Socket connection timeout');
+            reject(new Error('Socket connection timeout'));
+          }
+        }, 10000); // 10 second timeout
+
       } catch (error) {
-        console.error('Error creating Socket.IO connection:', error);
+        console.error('❌ Error creating Socket.IO connection:', error);
         reject(error);
       }
     });
@@ -112,11 +127,16 @@ class SocketService {
   // Join a room
   joinRoom(username: string, roomCode: string): void {
     if (this.socket && this.isConnected) {
+      console.log('🚪 Joining room:', { username, roomCode });
       this.socket.emit('join-room', { username, roomCode });
-      console.log('Joining room:', { username, roomCode });
     } else {
-      console.error('Cannot join room: Socket not connected');
-      throw new Error('Socket not connected');
+      console.error('❌ Cannot join room: Socket not connected');
+      console.log('🔍 Socket status:', {
+        socketExists: !!this.socket,
+        isConnected: this.isConnected,
+        connectionInfo: this.getConnectionInfo()
+      });
+      throw new Error('Socket not connected. Please try connecting again.');
     }
   }
 
@@ -184,6 +204,24 @@ class SocketService {
     }
   }
 
+  // Get connection info
+  getConnectionInfo() {
+    return {
+      isConnected: this.isConnected,
+      reconnectAttempts: this.reconnectAttempts,
+      maxReconnectAttempts: this.maxReconnectAttempts,
+      socketUrl: this.getSocketUrl(),
+      socketConfig: this.getSocketConfig(),
+      socketExists: !!this.socket,
+      socketId: this.socket?.id || 'N/A'
+    };
+  }
+
+  // Check if socket is ready for operations
+  isReady(): boolean {
+    return this.isConnected && !!this.socket;
+  }
+
   // Get connection status
   getConnectionStatus(): boolean {
     return this.isConnected;
@@ -192,17 +230,6 @@ class SocketService {
   // Get socket instance
   getSocket(): Socket | null {
     return this.socket;
-  }
-
-  // Get connection info
-  getConnectionInfo() {
-    return {
-      isConnected: this.isConnected,
-      reconnectAttempts: this.reconnectAttempts,
-      maxReconnectAttempts: this.maxReconnectAttempts,
-      socketUrl: this.getSocketUrl(),
-      socketConfig: this.getSocketConfig()
-    };
   }
 
   // Remove all listeners

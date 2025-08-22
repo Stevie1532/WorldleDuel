@@ -29,6 +29,7 @@ function RoomPage() {
   const [isStarting, setIsStarting] = useState(false)
   const [showCountdown, setShowCountdown] = useState(false)
   const [error, setError] = useState('')
+  const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
     if (!currentRoom || currentRoom.code !== code) {
@@ -37,8 +38,23 @@ function RoomPage() {
       return
     }
 
-    // Join the room via socket
-    socketService.joinRoom(currentPlayer || 'Anonymous', code)
+    // Connect to socket and join room
+    const connectAndJoin = async () => {
+      try {
+        // Connect to socket first
+        await socketService.connect()
+        setIsConnected(true)
+        
+        // Then join the room
+        socketService.joinRoom(currentPlayer || 'Anonymous', code)
+      } catch (error) {
+        console.error('Failed to connect to socket:', error)
+        setError('Failed to connect to game server. Please try again.')
+        setIsConnected(false)
+      }
+    }
+
+    connectAndJoin()
 
     // Listen for room updates
     socketService.onRoomUpdated((room) => {
@@ -141,6 +157,42 @@ function RoomPage() {
           <div className="text-lg text-gray-700">
             {currentRoom.mode === 'duel' ? 'Face off against one opponent' : 'Last player standing wins'}
           </div>
+        </motion.div>
+
+        {/* Connection Status */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mb-6 text-center"
+        >
+          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+            isConnected 
+              ? 'bg-green-100 text-green-800 border border-green-300' 
+              : 'bg-red-100 text-red-800 border border-red-300'
+          }`}>
+            <div className={`w-2 h-2 rounded-full mr-2 ${
+              isConnected ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            {isConnected ? 'Connected to Game Server' : 'Disconnected from Game Server'}
+          </div>
+          
+          {!isConnected && (
+            <button
+              onClick={async () => {
+                try {
+                  await socketService.connect()
+                  setIsConnected(true)
+                  socketService.joinRoom(currentPlayer || 'Anonymous', code)
+                } catch (error) {
+                  console.error('Reconnection failed:', error)
+                  setError('Failed to reconnect. Please refresh the page.')
+                }
+              }}
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+            >
+              🔄 Reconnect
+            </button>
+          )}
         </motion.div>
 
         {/* Error Message */}
