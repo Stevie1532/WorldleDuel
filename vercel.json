@@ -5,14 +5,14 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "out"
+        "distDir": "out/renderer"
       }
     }
   ],
   "buildCommand": "pnpm run build:prod",
-  "outputDirectory": "out",
+  "outputDirectory": "out/renderer",
   "installCommand": "pnpm install",
-  "framework": "electron",
+  "framework": "vite",
   "env": {
     "NODE_ENV": "production"
   },
