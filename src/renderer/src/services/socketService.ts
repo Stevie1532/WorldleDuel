@@ -56,8 +56,20 @@ class SocketService {
         
         this.socket = io(socketUrl, config);
 
+        // Set up connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (!this.isConnected) {
+            console.error('⏰ Socket connection timeout');
+            this.socket?.removeAllListeners();
+            this.socket?.disconnect();
+            this.socket = null;
+            reject(new Error('Socket connection timeout - server may be unavailable'));
+          }
+        }, 15000); // Increased to 15 seconds
+
         this.socket.on('connect', () => {
           console.log('✅ Connected to Socket.IO server successfully');
+          clearTimeout(connectionTimeout);
           this.isConnected = true;
           this.reconnectAttempts = 0;
           resolve();
@@ -65,6 +77,7 @@ class SocketService {
 
         this.socket.on('connect_error', (error) => {
           console.error('❌ Socket.IO connection error:', error);
+          clearTimeout(connectionTimeout);
           this.isConnected = false;
           reject(error);
         });
@@ -90,14 +103,6 @@ class SocketService {
         this.socket.on('error', (error) => {
           console.error('❌ Socket.IO error:', error);
         });
-
-        // Add timeout for connection
-        setTimeout(() => {
-          if (!this.isConnected) {
-            console.error('⏰ Socket connection timeout');
-            reject(new Error('Socket connection timeout'));
-          }
-        }, 10000); // 10 second timeout
 
       } catch (error) {
         console.error('❌ Error creating Socket.IO connection:', error);
@@ -281,6 +286,87 @@ class SocketService {
     } catch (error) {
       console.error('❌ Manual reconnection failed:', error);
       throw error;
+    }
+  }
+
+  // Test backend connectivity
+  async testBackendConnectivity(): Promise<{ success: boolean; error?: string; details?: any }> {
+    const socketUrl = this.getSocketUrl();
+    console.log('🧪 Testing backend connectivity to:', socketUrl);
+    
+    try {
+      // Try to fetch the health check endpoint
+      const healthUrl = socketUrl.replace(/\/$/, '') + '/health';
+      console.log('🏥 Testing health endpoint:', healthUrl);
+      
+      const response = await fetch(healthUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        console.log('✅ Backend health check successful');
+        return { success: true };
+      } else {
+        console.error('❌ Backend health check failed:', response.status, response.statusText);
+        return { 
+          success: false, 
+          error: `Health check failed: ${response.status} ${response.statusText}`,
+          details: { status: response.status, statusText: response.statusText }
+        };
+      }
+    } catch (error) {
+      console.error('❌ Backend connectivity test failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error
+      };
+    }
+  }
+
+  // Test Socket.IO specific connectivity
+  async testSocketIOConnectivity(): Promise<{ success: boolean; error?: string; details?: any }> {
+    const socketUrl = this.getSocketUrl();
+    console.log('🔌 Testing Socket.IO connectivity to:', socketUrl);
+    
+    try {
+      // Test if Socket.IO endpoint is reachable
+      const socketIOUrl = socketUrl.replace(/\/$/, '') + '/socket.io/';
+      console.log('🔌 Testing Socket.IO endpoint:', socketIOUrl);
+      
+      const response = await fetch(socketIOUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      console.log('🔌 Socket.IO endpoint response:', response.status, response.statusText);
+      
+      // Socket.IO endpoint might return different status codes, but we just want to see if it's reachable
+      if (response.status < 500) { // Any response < 500 means the endpoint is reachable
+        console.log('✅ Socket.IO endpoint is reachable');
+        return { success: true, details: { status: response.status, statusText: response.statusText } };
+      } else {
+        console.error('❌ Socket.IO endpoint error:', response.status, response.statusText);
+        return { 
+          success: false, 
+          error: `Socket.IO endpoint error: ${response.status} ${response.statusText}`,
+          details: { status: response.status, statusText: response.statusText }
+        };
+      }
+    } catch (error) {
+      console.error('❌ Socket.IO connectivity test failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error
+      };
     }
   }
 }

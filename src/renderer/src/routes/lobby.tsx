@@ -71,8 +71,16 @@ function LobbyPage() {
       navigate({ to: `/room/${response.code}` })
     } catch (err) {
       console.error('Error creating room:', err)
-      if (err instanceof Error && err.message.includes('Socket')) {
-        setError('Failed to connect to game server. Please check your connection and try again.')
+      if (err instanceof Error) {
+        if (err.message.includes('Socket')) {
+          setError('Failed to connect to game server. Please check your connection and try again.')
+        } else if (err.message.includes('timeout')) {
+          setError('Game server connection timed out. The server may be unavailable or overloaded.')
+        } else if (err.message.includes('fetch')) {
+          setError('Network error. Please check your internet connection.')
+        } else {
+          setError(`Failed to create room: ${err.message}`)
+        }
       } else {
         setError('Failed to create room. Please try again.')
       }
@@ -106,8 +114,16 @@ function LobbyPage() {
       navigate({ to: `/room/${roomCode.trim().toUpperCase()}` })
     } catch (err: any) {
       console.error('Error joining room:', err)
-      if (err instanceof Error && err.message.includes('Socket')) {
-        setError('Failed to connect to game server. Please check your connection and try again.')
+      if (err instanceof Error) {
+        if (err.message.includes('Socket')) {
+          setError('Failed to connect to game server. Please check your connection and try again.')
+        } else if (err.message.includes('timeout')) {
+          setError('Game server connection timed out. The server may be unavailable or overloaded.')
+        } else if (err.message.includes('fetch')) {
+          setError('Network error. Please check your internet connection.')
+        } else {
+          setError(err.message || 'Failed to join room. Please try again.')
+        }
       } else {
         setError(err.message || 'Failed to join room. Please try again.')
       }
@@ -160,6 +176,52 @@ function LobbyPage() {
             {error}
           </motion.div>
         )}
+
+        {/* Backend Connectivity Test */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+        >
+          <div className="text-center space-y-2">
+            <button
+              onClick={async () => {
+                try {
+                  console.log('🧪 Testing backend connectivity...');
+                  
+                  // Test HTTP connectivity first
+                  const httpResult = await socketService.testBackendConnectivity();
+                  console.log('🏥 HTTP test result:', httpResult);
+                  
+                  // Test Socket.IO connectivity
+                  const socketResult = await socketService.testSocketIOConnectivity();
+                  console.log('🔌 Socket.IO test result:', socketResult);
+                  
+                  if (httpResult.success && socketResult.success) {
+                    setError('');
+                    console.log('✅ Both HTTP and Socket.IO endpoints are reachable');
+                  } else {
+                    const errors: string[] = [];
+                    if (!httpResult.success) errors.push(`HTTP: ${httpResult.error}`);
+                    if (!socketResult.success) errors.push(`Socket.IO: ${socketResult.error}`);
+                    setError(`Backend connectivity test failed: ${errors.join('; ')}`);
+                    console.error('❌ Backend connectivity test failed:', { httpResult, socketResult });
+                  }
+                } catch (err) {
+                  setError('Failed to test backend connectivity');
+                  console.error('Error testing backend:', err);
+                }
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
+            >
+              🧪 Test Backend Connection
+            </button>
+            <div className="text-xs text-blue-600">
+              Test both HTTP and Socket.IO connectivity
+            </div>
+          </div>
+        </motion.div>
 
         {/* Create Room Section */}
         <motion.div
