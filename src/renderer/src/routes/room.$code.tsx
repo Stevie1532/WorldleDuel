@@ -65,7 +65,7 @@ function RoomPage() {
     socketService.onGameStarted((_data) => {
       setGameStatus('playing')
       setShowCountdown(false)
-      navigate({ to: '/results' })
+      navigate({ to: '/game' })
     })
 
     // Listen for game errors
@@ -278,14 +278,20 @@ function RoomPage() {
                 <div className="text-lg font-semibold text-green-800 mb-2">
                   Game in Progress!
                 </div>
-                <div className="text-green-600">
-                  Navigate to the game page to start playing.
+                <div className="text-green-600 mb-4">
+                  The game has started! Click below to start playing.
                 </div>
                 <button
-                  onClick={() => navigate({ to: '/results' })}
-                  className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                  onClick={() => navigate({ to: '/game' })}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors mr-4"
                 >
-                  Go to Game
+                  Start Playing
+                </button>
+                <button
+                  onClick={() => navigate({ to: '/results' })}
+                  className="px-6 py-2 border border-green-600 text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+                >
+                  View Results
                 </button>
               </motion.div>
             )}

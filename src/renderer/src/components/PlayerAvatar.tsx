@@ -27,8 +27,15 @@ export function PlayerAvatar({
   showStatus = true,
   onClick 
 }: PlayerAvatarProps) {
-  // Generate consistent emoji based on player ID
-  const emojiIndex = player.id.charCodeAt(0) % avatarEmojis.length
+  // Safety check for incomplete player data
+  if (!player || !player.username) {
+    console.warn('PlayerAvatar: Invalid player data:', player)
+    return null
+  }
+
+  // Generate consistent emoji based on player ID or username as fallback
+  const identifier = player.id || player.username || 'unknown'
+  const emojiIndex = identifier.charCodeAt(0) % avatarEmojis.length
   const avatarEmoji = avatarEmojis[emojiIndex]
 
   const sizeClasses = {
